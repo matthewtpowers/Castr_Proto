@@ -30,6 +30,9 @@ public class HomeActivity extends Activity implements View.OnClickListener {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+
+        mProducerBtn = (Button)findViewById(R.id.producer_button);
+        mConsumerBtn = (Button)findViewById(R.id.consumer_button);
         mProducerBtn.setOnClickListener(this);
         mConsumerBtn.setOnClickListener(this);
     }

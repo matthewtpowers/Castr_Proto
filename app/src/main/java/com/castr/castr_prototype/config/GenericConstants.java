@@ -5,14 +5,18 @@ package com.castr.castr_prototype.config;
  */
 public class GenericConstants {
 
-    // Replace with a generated Tok Session ID
-    public static final String TOK_SESSION_ID = "2_MX40NTAwOTE5Mn5-MTQxMjgxMDI4OTA2Mn5DZS8xamZNQlZrMnNmN2t2NXpXRzZhWnF-fg";
-    // OpenTok Token
-    public static final String TOK_TOKEN = "T1==cGFydG5lcl9pZD00NTAwOTE5MiZzaWc9MDc5MDI0OTZlYmM1N2Q1Mzk3M2NjYzc0ZDhjZTc3ZTNkZTkzMTJjMTpyb2xlPXB1Ymxpc2hlciZzZXNzaW9uX2lkPTJfTVg0ME5UQXdPVEU1TW41LU1UUXhNamd4TURJNE9UQTJNbjVEWlM4eGFtWk5RbFpyTW5ObU4ydDJOWHBYUnpaaFduRi1mZyZjcmVhdGVfdGltZT0xNDEyODEwMzAxJm5vbmNlPTAuMjY0NjMzODM5OTY4NTI0ODUmZXhwaXJlX3RpbWU9MTQxMjgxMjA4Nw==";
-    // OpenTok API Key
+    // *** Fill the following variables using your own Project info from the OpenTok dashboard  ***
+    // ***                      https://dashboard.tokbox.com/projects                           ***
+    // Replace with a generated Session ID
+    public static final String TOK_SESSION_ID =
+            "1_MX40NTAwOTE5Mn5-MTQxMjg4Nzk0MTU0N34rYlBkNkpuUnNNU1d3R3IzRTVRUmRNclB-fg";
+    // Replace with a generated token (from the dashboard or using an OpenTok server SDK)
+    public static final String TOK_TOKEN = "T1==cGFydG5lcl9pZD00NTAwOTE5MiZzaWc9ZTI4NjMxMGVjYTk3Nzk3MDg4ZjhjYzA5OWM5M2ZlYzgyYWUzNTI5ZTpyb2xlPXB1Ymxpc2hlciZzZXNzaW9uX2lkPTFfTVg0ME5UQXdPVEU1TW41LU1UUXhNamc0TnprME1UVTBOMzRyWWxCa05rcHVVbk5OVTFkM1IzSXpSVFZSVW1STmNsQi1mZyZjcmVhdGVfdGltZT0xNDEyODg3OTUyJm5vbmNlPTAuMjE3NzU4NTAyNDkzNDU1NzQmZXhwaXJlX3RpbWU9MTQxMjkwOTUzMg==";
+    // Replace with your OpenTok API key
     public static final String TOK_API_KEY= "45009192";
 
     // Subscribe to a stream published by this client. Set to false to subscribe
     // to other clients' streams only.
     public static final boolean SUBSCRIBE_TO_SELF = true;
+
 }

@@ -40,8 +40,6 @@ public class ProducerActivity extends Activity implements Session.ConnectionList
     //Boolean for if we are live
     private boolean isCasting = false;
 
-
-
     //TODO move the connection activity off of the main thread.
 
     @Override
@@ -76,7 +74,7 @@ public class ProducerActivity extends Activity implements Session.ConnectionList
 
     //Connection Listener Method
     @Override
-    public void onConnectionCreated(Session session, Connection connection) {
+    public void onCreated(Session session, Connection connection) {
         Log.e(LOG_TAG,"Connection Listener Connect ID: " + session.getSessionId());
         Log.e(LOG_TAG,"Connection Listener Creation Time: " + connection.getCreationTime());
         Log.e(LOG_TAG,"Connection Listener Connection ID: " + connection.getConnectionId());
@@ -128,13 +126,14 @@ public class ProducerActivity extends Activity implements Session.ConnectionList
         mSession.publish(mPublisher);
 
 
+
     }
 
     //Session Listener Method
     @Override
     public void onDisconnected(Session session) {
         Log.e(LOG_TAG,"Session Disconnect ID: " + session.getSessionId());
-        isCasting = false;
+        reset();
     }
 
     //Session Listener Method
@@ -165,11 +164,11 @@ public class ProducerActivity extends Activity implements Session.ConnectionList
                 Toast.LENGTH_SHORT);
         toast.show();
         isCasting = false;
+        reset();
     }
 
     @Override
     public void onClick(View view) {
-        Log.e(LOG_TAG,"Is Casting: " + isCasting);
         switch(view.getId())
         {
 
@@ -204,6 +203,7 @@ public class ProducerActivity extends Activity implements Session.ConnectionList
     @Override
     public void onError(PublisherKit publisherKit, OpentokError opentokError) {
             Log.e(LOG_TAG,"Stream Error");
+            reset();
     }
 
     private void connectToTok()
@@ -226,9 +226,16 @@ public class ProducerActivity extends Activity implements Session.ConnectionList
         if(mSession != null)
         {
             mSession.disconnect();
-            mSession = null;
+            reset();
             mPubView.removeAllViews();
         }
+    }
+
+    public void reset()
+    {
+        isCasting = false;
+        mSession = null;
+        mPublisher = null;
     }
 
 

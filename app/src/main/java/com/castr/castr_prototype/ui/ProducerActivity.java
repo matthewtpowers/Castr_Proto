@@ -7,6 +7,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
@@ -32,6 +33,7 @@ public class ProducerActivity extends Activity implements Session.ConnectionList
     //UI Related Elements
     private RelativeLayout mPubView;
     private Button mCastButton;
+    private ImageView mLogoView;
 
     //TokBox Elements
     private Session mSession;
@@ -49,6 +51,7 @@ public class ProducerActivity extends Activity implements Session.ConnectionList
         mPubView = (RelativeLayout)findViewById(R.id.publisherview);
         mCastButton = (Button)findViewById(R.id.cast_button);
         mCastButton.setOnClickListener(this);
+        mLogoView = (ImageView)findViewById(R.id.logo);
     }
 
 
@@ -71,14 +74,49 @@ public class ProducerActivity extends Activity implements Session.ConnectionList
         return super.onOptionsItemSelected(item);
     }
 
+    //Android Lifecycle Methods
 
-    //Connection Listener Method
+
     @Override
-    public void onCreated(Session session, Connection connection) {
+    protected void onResume() {
+        Log.e(LOG_TAG,"On Resume");
+        if(mSession != null)
+        {
+            mSession.onResume();
+        }
+        super.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        Log.e(LOG_TAG,"On Pause");
+        if(mSession != null)
+        {
+            mSession.onPause();
+        }
+        super.onPause();
+    }
+
+    @Override
+    protected void onDestroy()
+    {
+        Log.e(LOG_TAG,"On Destroy");
+        if(mSession != null)
+        {
+            mSession.disconnect();
+            mSession = null;
+        }
+
+        super.onDestroy();
+        finish();
+    }
+
+
+    @Override
+    public void onConnectionCreated(Session session, Connection connection) {
         Log.e(LOG_TAG,"Connection Listener Connect ID: " + session.getSessionId());
         Log.e(LOG_TAG,"Connection Listener Creation Time: " + connection.getCreationTime());
         Log.e(LOG_TAG,"Connection Listener Connection ID: " + connection.getConnectionId());
-
     }
 
     //Connection Listener Method
@@ -191,13 +229,13 @@ public class ProducerActivity extends Activity implements Session.ConnectionList
            Log.e(LOG_TAG,"Stream created");
            mCastButton.setText(CASTING_TEXT);
            isCasting = true;
+           mLogoView.setVisibility(View.INVISIBLE);
     }
 
     @Override
     public void onStreamDestroyed(PublisherKit publisherKit, Stream stream) {
            Log.e(LOG_TAG,"Stream Destroyed");
-           mCastButton.setText(NOT_CASTING_TEXT);
-           isCasting = false;
+           reset();
     }
 
     @Override
@@ -236,45 +274,12 @@ public class ProducerActivity extends Activity implements Session.ConnectionList
         isCasting = false;
         mSession = null;
         mPublisher = null;
+        mLogoView.setVisibility(View.VISIBLE);
+        mCastButton.setText(NOT_CASTING_TEXT);
     }
 
 
-    //Android Lifecycle Methods
 
-
-    @Override
-    protected void onResume() {
-        Log.e(LOG_TAG,"On Resume");
-        if(mSession != null)
-        {
-            mSession.onResume();
-        }
-        super.onResume();
-    }
-
-    @Override
-    protected void onPause() {
-        Log.e(LOG_TAG,"On Pause");
-        if(mSession != null)
-        {
-            mSession.onPause();
-        }
-        super.onPause();
-    }
-
-    @Override
-    protected void onDestroy()
-    {
-        Log.e(LOG_TAG,"On Destroy");
-        if(mSession != null)
-        {
-            mSession.disconnect();
-            mSession = null;
-        }
-
-        super.onDestroy();
-        finish();
-    }
 
 
 }

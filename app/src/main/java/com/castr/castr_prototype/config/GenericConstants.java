@@ -9,10 +9,10 @@ public class GenericConstants {
     // ***                      https://dashboard.tokbox.com/projects                           ***
     // Replace with a generated Session ID
     public static final String TOK_SESSION_ID =
-            "1_MX40NTAwOTE5Mn5-MTQxMjg5NDM0MDMxOH5JKzQ2dGw3NlhMQ1hKc2kyczEyYXd0YlN-fg";
+            "2_MX40NTAwOTE5Mn5-MTQxMjk3NTU3MzYwOX4rWjdIU1J4Y1F3N080d1czL2gvQVRYbE5-fg";
     // Replace with a generated token (from the dashboard or using an OpenTok server SDK)
-    public static final String TOK_TOKEN = "T1==cGFydG5lcl9pZD00NTAwOTE5MiZzaWc9MTIwZTU4MWIxNmVkZWU2NGM2YjcxZDllOGMwOGZlNmFiYmQ1MmJkNzpyb2xlPXB1Ymxpc2hlciZzZXNzaW9uX2lkPTFfTVg0ME5UQXdPVEU1TW41LU1UUXhNamc1TkRNME1ETXhPSDVKS3pRMmRHdzNObGhNUTFoS2Mya3ljekV5WVhkMFlsTi1mZyZjcmVhdGVfdGltZT0xNDEyODk0MzU2Jm5vbmNlPTAuMTUxMDEzMzY3NzAyOTQwMTYmZXhwaXJlX3RpbWU9MTQxMjkxNTkzMQ==";
-    // Replace with your OpenTok API key
+    public static final String TOK_TOKEN = "T1==cGFydG5lcl9pZD00NTAwOTE5MiZzaWc9ZjFjYTRkZjVmMDZhMjc2YTc2YjRiMGMzYzhkMDdjOTQwMzc4ZGVlNzpyb2xlPXB1Ymxpc2hlciZzZXNzaW9uX2lkPTJfTVg0ME5UQXdPVEU1TW41LU1UUXhNamszTlRVM016WXdPWDRyV2pkSVUxSjRZMUYzTjA4MGQxY3pMMmd2UVZSWWJFNS1mZyZjcmVhdGVfdGltZT0xNDEyOTc1NjAxJm5vbmNlPTAuODc2NjM1ODE0MzUzOTk4OCZleHBpcmVfdGltZT0xNDEyOTk3MTQ4";
+     // Replace with your OpenTok API key
     public static final String TOK_API_KEY= "45009192";
 
     // Subscribe to a stream published by this client. Set to false to subscribe

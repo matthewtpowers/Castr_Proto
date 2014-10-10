@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.castr.castr_prototype" >
+
+    <uses-sdk
+        android:minSdkVersion="16"
+        android:targetSdkVersion="17" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme" >
+        <activity
+            android:name=".ui.HomeActivity"
+            android:label="@string/app_name" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".ui.ProducerActivity"
+            android:label="@string/title_activity_producer" >
+        </activity>
+        <activity
+            android:name=".ui.ConsumerActivity"
+            android:label="@string/title_activity_consumer" >
+        </activity>
+    </application>
+
+    <!-- Need the camera to take video -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Permission to use internet -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Permission to record audio as part of the video -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- Permission to alter audio -->
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+
+    <uses-feature android:name="android.hardware.camera" />
+    <uses-feature android:name="android.hardware.camera.autofocus" />
+
+</manifest>

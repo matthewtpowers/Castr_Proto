@@ -6,12 +6,17 @@
 
 
     <RelativeLayout
-        android:background="@android:color/holo_red_dark"
         android:id="@+id/publisherview"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent" >
     </RelativeLayout>
 
+    <ImageView
+        android:id="@+id/logo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:src="@drawable/castr_logo"/>
     <Button
         android:id="@+id/cast_button"
         android:layout_width="fill_parent"

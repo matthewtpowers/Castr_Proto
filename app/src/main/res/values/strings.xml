@@ -7,5 +7,11 @@
     <string name="title_activity_producer">ProducerActivity</string>
     <string name="title_activity_consumer">ConsumerActivity</string>
     <string name="title_activity_test">TestActivity</string>
+    <string-array name="action_list">
+        <item>Mercury</item>
+        <item>Venus</item>
+        <item>Earth</item>
+    </string-array>
+
 
 </resources>

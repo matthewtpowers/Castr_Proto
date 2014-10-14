@@ -2,13 +2,17 @@ package com.castr.castr_prototype.util;
 
 import android.util.Log;
 
+import com.castr.castr_prototype.model.CastrBroadcast;
+import com.parse.FindCallback;
 import com.parse.FunctionCallback;
 import com.parse.ParseCloud;
 import com.parse.ParseException;
 import com.parse.ParseObject;
+import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,15 +24,6 @@ import java.util.Map;
 public class ParseHelper {
 
     private static final String LOG_TAG = ParseHelper.class.getSimpleName();
-
-
-    //Broadcast Class
-    public static final String BROADCAST_KEY = "Broadcast";
-    public static final String BROADCAST_TYPE_KEY = "broadcastType";
-    public static final String BROADCAST_TITLE_KEY = "title";
-    public static final String BROADCAST_END_DATE_KEY = "endedAt";
-    public static final String BROADCAST_SESSION_ID_KEY = "sessionId";
-    public static final String BROADCAST_OWNER_KEY = "owner";
 
     //Cloud Function Method Names
     public static final String METHOD_BROADCAST_TOKEN = "getBroadcastToken";
@@ -48,12 +43,11 @@ public class ParseHelper {
      * @param sc
      * @return
      */
-    public static ParseObject createBroadcast(int type, String title, SaveCallback sc) {
-        ParseObject obj = new ParseObject(BROADCAST_KEY);
-        obj.put(BROADCAST_TYPE_KEY,1);
-        //You need to have a user object (even if its anonymous) in parse.
-        obj.put(BROADCAST_OWNER_KEY, ParseUser.getCurrentUser());
-        obj.put(BROADCAST_TITLE_KEY, title);
+    public static CastrBroadcast createBroadcast(int type, String title, SaveCallback sc) {
+        CastrBroadcast obj = new CastrBroadcast();
+        obj.setBroadcastType(type);
+        obj.setOwner(ParseUser.getCurrentUser());
+        obj.setTitle(title);
         obj.saveInBackground(sc);
         return obj;
     }
@@ -62,13 +56,18 @@ public class ParseHelper {
      * End the broadcast in Parse, this should be part of a reset method
      * @param obj
      */
-    public static void endBroadcast(ParseObject obj)
+    public static void endBroadcast(CastrBroadcast obj)
     {
-        obj.put(BROADCAST_END_DATE_KEY, new Date());
+        obj.setEndDate(new Date());
         obj.saveInBackground();
     }
 
-
+    public static void getAvailableBroadcasts(FindCallback<CastrBroadcast> callback)
+    {
+        ParseQuery<CastrBroadcast> query = ParseQuery.getQuery(CastrBroadcast.BROADCAST_KEY);
+        query.whereDoesNotExist(CastrBroadcast.BROADCAST_END_DATE_KEY);
+        query.findInBackground(callback);
+    }
 
     public static void getAccessToken(String id, FunctionCallback<Object> callback)
     {

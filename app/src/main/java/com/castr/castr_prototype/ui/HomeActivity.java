@@ -41,14 +41,7 @@ public class HomeActivity extends Activity implements View.OnClickListener {
         mProducerBtn.setOnClickListener(this);
         mConsumerBtn.setOnClickListener(this);
 
-        //Setup parse
-        Parse.initialize(this, GenericConstants.PARSE_APP_ID, GenericConstants.PARSE_CLIENT_ID);
 
-        //TODO - replace this with real users at some point
-        //This is an annonymous user
-        ParseUser.enableAutomaticUser();
-        ParseUser.getCurrentUser().increment("RunCount");
-        ParseUser.getCurrentUser().saveInBackground();
     }
 
 

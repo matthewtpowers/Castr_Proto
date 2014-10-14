@@ -1,18 +1,23 @@
 package com.castr.castr_prototype.ui;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.SpinnerAdapter;
 import android.widget.Toast;
 
 import com.castr.castr_prototype.R;
 import com.castr.castr_prototype.config.GenericConstants;
+import com.castr.castr_prototype.model.CastrBroadcast;
+import com.castr.castr_prototype.util.ParseHelper;
 import com.opentok.android.BaseVideoRenderer;
 import com.opentok.android.Connection;
 import com.opentok.android.OpentokError;
@@ -21,9 +26,15 @@ import com.opentok.android.Session;
 import com.opentok.android.Stream;
 import com.opentok.android.Subscriber;
 import com.opentok.android.SubscriberKit;
+import com.parse.FindCallback;
+import com.parse.ParseException;
+import com.parse.ParseObject;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ConsumerActivity extends Activity implements View.OnClickListener, Session.ConnectionListener, Session.SignalListener, Session.StreamPropertiesListener, Session.SessionListener, SubscriberKit.SubscriberListener,
-        Subscriber.VideoListener {
+        Subscriber.VideoListener, ActionBar.OnNavigationListener {
 
     private static final String LOG_TAG = ConsumerActivity.class.getSimpleName();
     private static final String NOT_CASTING_TEXT = "Grab a Cast!";
@@ -33,7 +44,10 @@ public class ConsumerActivity extends Activity implements View.OnClickListener, 
     private RelativeLayout mConsumerView;
     private Button mCastButton;
     private ImageView mLogoView;
+    private ActionBar mActionBar;
 
+    //Parse Elements
+    private List<CastrBroadcast> mBroadcasts;
 
     //Tokbox Elements
     private Session mSession;
@@ -46,10 +60,14 @@ public class ConsumerActivity extends Activity implements View.OnClickListener, 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_consumer);
+        mActionBar = getActionBar();
+        mActionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
         mConsumerView = (RelativeLayout) findViewById(R.id.consumerview);
         mCastButton = (Button) findViewById(R.id.consume_button);
         mCastButton.setOnClickListener(this);
         mLogoView = (ImageView)findViewById(R.id.logo);
+        getAvailableStreams();
+
     }
 
 
@@ -244,6 +262,13 @@ public class ConsumerActivity extends Activity implements View.OnClickListener, 
         Log.e(LOG_TAG, "Video Disabled Warning Lifted");
     }
 
+    @Override
+    public boolean onNavigationItemSelected(int itemPosition, long itemId)
+    {
+        Log.e(LOG_TAG,"Item Selected");
+        return false;
+    }
+
 
     private void consumeTok() {
         mSession = null;
@@ -269,5 +294,35 @@ public class ConsumerActivity extends Activity implements View.OnClickListener, 
         mCastButton.setText(NOT_CASTING_TEXT);
         isSubscribed = false;
         mLogoView.setVisibility(View.VISIBLE);
+    }
+
+    private void getAvailableStreams()
+    {
+        ParseHelper.getAvailableBroadcasts(new FindCallback<CastrBroadcast>() {
+            @Override
+            public void done(List<CastrBroadcast> castrBroadcasts, ParseException e) {
+                if (e == null) {
+                    Log.e(LOG_TAG, "We are good, there are this many parse objects: " + castrBroadcasts.size());
+                    mBroadcasts = castrBroadcasts;
+                    List<String> broadcastTitles = new ArrayList<String>();
+                    for (int i =0; i < mBroadcasts.size(); i++)
+                    {
+                        if(mBroadcasts.get(i).getTitle() == null)
+                        {
+                            broadcastTitles.add("No Title");
+                        }
+                        else
+                        {
+                            broadcastTitles.add(mBroadcasts.get(i).getTitle());
+                        }
+                    }
+                    ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(getApplicationContext(),android.R.layout.simple_spinner_dropdown_item, broadcastTitles);
+                    mActionBar.setListNavigationCallbacks(arrayAdapter, ConsumerActivity.this);
+                } else {
+                    Log.e(LOG_TAG, "There is an exception: " + e.getLocalizedMessage());
+
+                }
+            }
+        });
     }
 }

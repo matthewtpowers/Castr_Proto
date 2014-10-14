@@ -13,6 +13,7 @@ import android.widget.Toast;
 
 import com.castr.castr_prototype.R;
 import com.castr.castr_prototype.config.GenericConstants;
+import com.castr.castr_prototype.model.CastrBroadcast;
 import com.castr.castr_prototype.util.ParseHelper;
 import com.opentok.android.BaseVideoRenderer;
 import com.opentok.android.Connection;
@@ -23,15 +24,21 @@ import com.opentok.android.Session;
 import com.opentok.android.Stream;
 import com.parse.FunctionCallback;
 import com.parse.ParseException;
-import com.parse.ParseObject;
+import com.parse.ParseUser;
 import com.parse.SaveCallback;
+
+/**
+ * @author Matt Powers, Applico
+ *
+ * This activity is intended to test the casting of video with Parse and TokBox
+ * TODO - a lot of this needs to be moved off of the main thread.
+ *
+ */
 
 public class ProducerActivity extends Activity implements Session.ConnectionListener, Session.SignalListener, Session.StreamPropertiesListener, Session.SessionListener, Publisher.PublisherListener,
         View.OnClickListener {
 
     private static final String LOG_TAG = ProducerActivity.class.getSimpleName();
-
-    private static final String PUBLISHER_NAME = "applico_publisher";
     private static final String NOT_CASTING_TEXT = "Start Casting!";
     private static final String CASTING_TEXT = "Stop Casting..";
 
@@ -47,7 +54,10 @@ public class ProducerActivity extends Activity implements Session.ConnectionList
     //Boolean for if we are live
     private boolean isCasting = false;
 
-    private ParseObject mBroadcastObj;
+    private CastrBroadcast mBroadcastObj;
+
+    //Publisher Name
+    private String mPublisherName = "";
 
     //TODO move the connection activity off of the main thread.
 
@@ -59,7 +69,8 @@ public class ProducerActivity extends Activity implements Session.ConnectionList
         mCastButton = (Button)findViewById(R.id.cast_button);
         mCastButton.setOnClickListener(this);
         mLogoView = (ImageView)findViewById(R.id.logo);
-
+        mPublisherName = ParseUser.getCurrentUser().getUsername();
+        Log.e(LOG_TAG,"Publisher Name: " + mPublisherName);
     }
 
 
@@ -83,8 +94,6 @@ public class ProducerActivity extends Activity implements Session.ConnectionList
     }
 
     //Android Lifecycle Methods
-
-
     @Override
     protected void onResume() {
         Log.e(LOG_TAG,"On Resume");
@@ -160,7 +169,7 @@ public class ProducerActivity extends Activity implements Session.ConnectionList
     public void onConnected(Session session) {
          Log.e(LOG_TAG,"Session Connect ID: " + session.getSessionId());
         mPublisher = null;
-        mPublisher = new Publisher(this,PUBLISHER_NAME);
+        mPublisher = new Publisher(this,mPublisherName);
         mPublisher.setPublisherListener(this);
         mPublisher.setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,BaseVideoRenderer.STYLE_VIDEO_FILL);
         //Attach the view
@@ -251,7 +260,12 @@ public class ProducerActivity extends Activity implements Session.ConnectionList
     }
 
 
-
+    /**
+     * 1) Create a Session, through parse with valid user
+     * 2) Get the token
+     * 3) Connect to the session
+     * 4) Setup the appropriate listeners
+     */
     private void connectToTok()
     {
 
@@ -259,7 +273,7 @@ public class ProducerActivity extends Activity implements Session.ConnectionList
         //Setup the session with the API key and Session ID
         //TODO move to parse
         Log.e(LOG_TAG,"Session ID: " + mBroadcastObj.get("sessionId"));
-        final String sessionId = mBroadcastObj.getString(ParseHelper.BROADCAST_SESSION_ID_KEY);
+        final String sessionId = mBroadcastObj.getString(CastrBroadcast.BROADCAST_SESSION_ID_KEY);
         Log.e(LOG_TAG,"Object ID: " + mBroadcastObj.getObjectId());
         //Get the token by passing in the OBJECT_ID from parse - not the session ID.  The objectID is uniquely created by parse.
         ParseHelper.getAccessToken(mBroadcastObj.getObjectId(), new FunctionCallback<Object>() {
@@ -292,14 +306,16 @@ public class ProducerActivity extends Activity implements Session.ConnectionList
 
     }
 
-    //Connect to parse and get the session ID
-    private void createSession()
+    /**
+     * Connect to parse and get the session ID
+     */
+     private void createSession()
     {
         mBroadcastObj = ParseHelper.createBroadcast(1,"Android Rules", new SaveCallback() {
             @Override
             public void done(ParseException e) {
                 if (e == null){
-                    Log.e(LOG_TAG,"No exception");
+                    //Got the session info, connect to Tok
                     connectToTok();
                 }
                 else
@@ -311,7 +327,10 @@ public class ProducerActivity extends Activity implements Session.ConnectionList
         });
     }
 
-    //After creating the session, the session needs to be connected to, needs error handling
+    /**
+     * After creating the session, the session needs to be connected to, needs error handling
+     */
+
     private void connectToSession(String token, String sessionId)
     {
         mSession = new Session(this, GenericConstants.TOK_API_KEY, sessionId);
@@ -323,7 +342,9 @@ public class ProducerActivity extends Activity implements Session.ConnectionList
     }
 
 
-
+    /**
+     * Disconnect from TokBox
+     */
     private void disconnectFromTok()
     {
         if(mSession != null)
@@ -334,6 +355,9 @@ public class ProducerActivity extends Activity implements Session.ConnectionList
         }
     }
 
+    /**
+     * Full reset before starting a stream
+     */
     public void reset()
     {
         if(mSession != null)

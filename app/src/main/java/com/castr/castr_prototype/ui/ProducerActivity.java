@@ -355,19 +355,4 @@ public class ProducerActivity extends Activity implements Session.ConnectionList
 
     }
 
-
-    private SaveCallback sc = new SaveCallback() {
-        @Override
-        public void done(ParseException e) {
-            if(e != null)
-            {
-                Log.e(LOG_TAG,"Save was successful");
-            }
-            else
-            {
-                Log.e(LOG_TAG,"Save was unsuccessful");
-            }
-        }
-    };
-
 }

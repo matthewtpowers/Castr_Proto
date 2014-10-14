@@ -249,7 +249,7 @@ public class ConsumerActivity extends Activity implements View.OnClickListener, 
         mSession = null;
         //Setup the session with the API key and Session ID
         //TODO move to parse
-        mSession = new Session(this, GenericConstants.TOK_API_KEY, GenericConstants.TOK_SESSION_ID);
+        //mSession = new Session(this, GenericConstants.TOK_API_KEY, GenericConstants.TOK_SESSION_ID);
         mSession.setConnectionListener(this);
         mSession.setSessionListener(this);
         mSession.setSignalListener(this);

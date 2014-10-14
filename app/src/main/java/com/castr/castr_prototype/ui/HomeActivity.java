@@ -3,12 +3,16 @@ package com.castr.castr_prototype.ui;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 
 import com.castr.castr_prototype.R;
+import com.castr.castr_prototype.config.GenericConstants;
+import com.parse.Parse;
+import com.parse.ParseUser;
 
 /**
  * Calling class to setup token access, allows the user to set whether or not they are the producer or consumer
@@ -31,10 +35,20 @@ public class HomeActivity extends Activity implements View.OnClickListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
+        //Setup UI
         mProducerBtn = (Button)findViewById(R.id.producer_button);
         mConsumerBtn = (Button)findViewById(R.id.consumer_button);
         mProducerBtn.setOnClickListener(this);
         mConsumerBtn.setOnClickListener(this);
+
+        //Setup parse
+        Parse.initialize(this, GenericConstants.PARSE_APP_ID, GenericConstants.PARSE_CLIENT_ID);
+
+        //TODO - replace this with real users at some point
+        //This is an annonymous user
+        ParseUser.enableAutomaticUser();
+        ParseUser.getCurrentUser().increment("RunCount");
+        ParseUser.getCurrentUser().saveInBackground();
     }
 
 

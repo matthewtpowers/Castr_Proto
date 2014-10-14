@@ -13,6 +13,7 @@ import android.widget.Toast;
 
 import com.castr.castr_prototype.R;
 import com.castr.castr_prototype.config.GenericConstants;
+import com.castr.castr_prototype.util.ParseHelper;
 import com.opentok.android.BaseVideoRenderer;
 import com.opentok.android.Connection;
 import com.opentok.android.OpentokError;
@@ -20,6 +21,10 @@ import com.opentok.android.Publisher;
 import com.opentok.android.PublisherKit;
 import com.opentok.android.Session;
 import com.opentok.android.Stream;
+import com.parse.FunctionCallback;
+import com.parse.ParseException;
+import com.parse.ParseObject;
+import com.parse.SaveCallback;
 
 public class ProducerActivity extends Activity implements Session.ConnectionListener, Session.SignalListener, Session.StreamPropertiesListener, Session.SessionListener, Publisher.PublisherListener,
         View.OnClickListener {
@@ -42,6 +47,8 @@ public class ProducerActivity extends Activity implements Session.ConnectionList
     //Boolean for if we are live
     private boolean isCasting = false;
 
+    private ParseObject mBroadcastObj;
+
     //TODO move the connection activity off of the main thread.
 
     @Override
@@ -52,6 +59,7 @@ public class ProducerActivity extends Activity implements Session.ConnectionList
         mCastButton = (Button)findViewById(R.id.cast_button);
         mCastButton.setOnClickListener(this);
         mLogoView = (ImageView)findViewById(R.id.logo);
+
     }
 
 
@@ -101,11 +109,7 @@ public class ProducerActivity extends Activity implements Session.ConnectionList
     protected void onDestroy()
     {
         Log.e(LOG_TAG,"On Destroy");
-        if(mSession != null)
-        {
-            mSession.disconnect();
-            mSession = null;
-        }
+        reset();
 
         super.onDestroy();
         finish();
@@ -213,7 +217,8 @@ public class ProducerActivity extends Activity implements Session.ConnectionList
             case R.id.cast_button:
                 if(!isCasting) {
                     Log.e(LOG_TAG,"Connect to Tok");
-                    connectToTok();
+                    //connectToTok();
+                    createSession();
                 }
                 else
                 {
@@ -230,6 +235,7 @@ public class ProducerActivity extends Activity implements Session.ConnectionList
            mCastButton.setText(CASTING_TEXT);
            isCasting = true;
            mLogoView.setVisibility(View.INVISIBLE);
+
     }
 
     @Override
@@ -244,17 +250,76 @@ public class ProducerActivity extends Activity implements Session.ConnectionList
             reset();
     }
 
+
+
     private void connectToTok()
     {
+
         mSession = null;
         //Setup the session with the API key and Session ID
         //TODO move to parse
-        mSession = new Session(this, GenericConstants.TOK_API_KEY, GenericConstants.TOK_SESSION_ID);
+        Log.e(LOG_TAG,"Session ID: " + mBroadcastObj.get("sessionId"));
+        final String sessionId = mBroadcastObj.getString(ParseHelper.BROADCAST_SESSION_ID_KEY);
+        Log.e(LOG_TAG,"Object ID: " + mBroadcastObj.getObjectId());
+        //Get the token by passing in the OBJECT_ID from parse - not the session ID.  The objectID is uniquely created by parse.
+        ParseHelper.getAccessToken(mBroadcastObj.getObjectId(), new FunctionCallback<Object>() {
+                    @Override
+                    public void done(Object o, ParseException e) {
+
+                        if(e == null)
+                        {
+                            String token = o.toString();
+                            Log.e(LOG_TAG,"Token: " + token);
+                            if(token != null) {
+                                connectToSession(token, sessionId);
+                            }
+                            else
+                            {
+                                Log.e(LOG_TAG,"There is an issue generating TokBox tokens");
+                            }
+                        }
+                        else
+                        {
+                            Log.e(LOG_TAG,"Exception: " + e.getLocalizedMessage());
+
+                        }
+                    }
+        });
+
+
+
+
+
+    }
+
+    //Connect to parse and get the session ID
+    private void createSession()
+    {
+        mBroadcastObj = ParseHelper.createBroadcast(1,"Android Rules", new SaveCallback() {
+            @Override
+            public void done(ParseException e) {
+                if (e == null){
+                    Log.e(LOG_TAG,"No exception");
+                    connectToTok();
+                }
+                else
+                {
+                    Log.e(LOG_TAG,"Exception with Parse");
+                    Log.e(LOG_TAG,"Exception: " + e.getLocalizedMessage());
+                }
+            }
+        });
+    }
+
+    //After creating the session, the session needs to be connected to, needs error handling
+    private void connectToSession(String token, String sessionId)
+    {
+        mSession = new Session(this, GenericConstants.TOK_API_KEY, sessionId);
         mSession.setConnectionListener(this);
         mSession.setSessionListener(this);
         mSession.setSignalListener(this);
         mSession.setStreamPropertiesListener(this);
-        mSession.connect(GenericConstants.TOK_TOKEN);
+        mSession.connect(token);
     }
 
 
@@ -271,15 +336,38 @@ public class ProducerActivity extends Activity implements Session.ConnectionList
 
     public void reset()
     {
+        if(mSession != null)
+        {
+            mSession.disconnect();
+
+        }
         isCasting = false;
         mSession = null;
         mPublisher = null;
         mLogoView.setVisibility(View.VISIBLE);
         mCastButton.setText(NOT_CASTING_TEXT);
+        if(mBroadcastObj != null)
+        {
+            ParseHelper.endBroadcast(mBroadcastObj);
+            Log.e(LOG_TAG,"Ended Broadcast");
+        }
+
+
     }
 
 
-
-
+    private SaveCallback sc = new SaveCallback() {
+        @Override
+        public void done(ParseException e) {
+            if(e != null)
+            {
+                Log.e(LOG_TAG,"Save was successful");
+            }
+            else
+            {
+                Log.e(LOG_TAG,"Save was unsuccessful");
+            }
+        }
+    };
 
 }

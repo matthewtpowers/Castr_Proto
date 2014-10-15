@@ -9,23 +9,10 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
-import android.widget.Toast;
 
 import com.castr.castr_prototype.R;
-import com.castr.castr_prototype.config.GenericConstants;
 import com.castr.castr_prototype.model.CastrBroadcast;
-import com.castr.castr_prototype.util.ParseHelper;
-import com.opentok.android.BaseVideoRenderer;
-import com.opentok.android.Connection;
-import com.opentok.android.OpentokError;
-import com.opentok.android.Publisher;
-import com.opentok.android.PublisherKit;
-import com.opentok.android.Session;
-import com.opentok.android.Stream;
-import com.parse.FunctionCallback;
-import com.parse.ParseException;
-import com.parse.ParseUser;
-import com.parse.SaveCallback;
+import streamsource.TokSource;
 
 /**
  * @author Matt Powers, Applico
@@ -35,8 +22,7 @@ import com.parse.SaveCallback;
  *
  */
 
-public class ProducerActivity extends Activity implements Session.ConnectionListener, Session.SignalListener, Session.StreamPropertiesListener, Session.SessionListener, Publisher.PublisherListener,
-        View.OnClickListener {
+public class ProducerActivity extends Activity implements  View.OnClickListener, TokSource.SourceCallback {
 
     private static final String LOG_TAG = ProducerActivity.class.getSimpleName();
     private static final String NOT_CASTING_TEXT = "Start Casting!";
@@ -47,17 +33,12 @@ public class ProducerActivity extends Activity implements Session.ConnectionList
     private Button mCastButton;
     private ImageView mLogoView;
 
-    //TokBox Elements
-    private Session mSession;
-    private Publisher mPublisher;
-
     //Boolean for if we are live
     private boolean isCasting = false;
 
-    private CastrBroadcast mBroadcastObj;
+    //TokSource drive everything right now.  Forewarning its coupled with Parse
+    private TokSource mTokSource;
 
-    //Publisher Name
-    private String mPublisherName = "";
 
     //TODO move the connection activity off of the main thread.
 
@@ -69,8 +50,7 @@ public class ProducerActivity extends Activity implements Session.ConnectionList
         mCastButton = (Button)findViewById(R.id.cast_button);
         mCastButton.setOnClickListener(this);
         mLogoView = (ImageView)findViewById(R.id.logo);
-        mPublisherName = ParseUser.getCurrentUser().getUsername();
-        Log.e(LOG_TAG,"Publisher Name: " + mPublisherName);
+        mTokSource = new TokSource(this,this);
     }
 
 
@@ -96,10 +76,9 @@ public class ProducerActivity extends Activity implements Session.ConnectionList
     //Android Lifecycle Methods
     @Override
     protected void onResume() {
-        Log.e(LOG_TAG,"On Resume");
-        if(mSession != null)
+        if(mTokSource != null)
         {
-            mSession.onResume();
+            mTokSource.resumeBroadcast();
         }
         super.onResume();
     }
@@ -107,9 +86,9 @@ public class ProducerActivity extends Activity implements Session.ConnectionList
     @Override
     protected void onPause() {
         Log.e(LOG_TAG,"On Pause");
-        if(mSession != null)
+        if(mTokSource != null)
         {
-            mSession.onPause();
+            mTokSource.pauseBroadcast();
         }
         super.onPause();
     }
@@ -117,266 +96,64 @@ public class ProducerActivity extends Activity implements Session.ConnectionList
     @Override
     protected void onDestroy()
     {
-        Log.e(LOG_TAG,"On Destroy");
-        reset();
-
+       if(mTokSource != null)
+       {
+           mTokSource.endBroadcast();
+       }
+        mTokSource = null;
         super.onDestroy();
         finish();
-    }
-
-
-    @Override
-    public void onConnectionCreated(Session session, Connection connection) {
-        Log.e(LOG_TAG,"Connection Listener Connect ID: " + session.getSessionId());
-        Log.e(LOG_TAG,"Connection Listener Creation Time: " + connection.getCreationTime());
-        Log.e(LOG_TAG,"Connection Listener Connection ID: " + connection.getConnectionId());
-    }
-
-    //Connection Listener Method
-    @Override
-    public void onConnectionDestroyed(Session session, Connection connection) {
-        Log.e(LOG_TAG,"Connection Destroyed Connect ID: " + session.getSessionId());
-        Log.e(LOG_TAG,"Connection Destroyed Creation Time: " + connection.getCreationTime());
-        Log.e(LOG_TAG,"Connection Destroyed Connection ID: " + connection.getConnectionId());
-    }
-
-    //Signal Listener Method
-    @Override
-    public void onSignalReceived(Session session, String s, String s2, Connection connection) {
-        Log.e(LOG_TAG,"Signal Received");
-    }
-
-    //Stream Listener Method
-    @Override
-    public void onStreamHasAudioChanged(Session session, Stream stream, boolean b) {
-        Log.e(LOG_TAG,"Stream Audio Changed");
-    }
-
-    //Stream Listener Method
-    @Override
-    public void onStreamHasVideoChanged(Session session, Stream stream, boolean b) {
-        Log.e(LOG_TAG,"Stream Video Changed");
-    }
-
-    //Stream Listener Method
-    @Override
-    public void onStreamVideoDimensionsChanged(Session session, Stream stream, int i, int i2) {
-        Log.e(LOG_TAG,"Stream Video Dimensions Changed");
-    }
-
-    //Session Listener Method
-    @Override
-    public void onConnected(Session session) {
-         Log.e(LOG_TAG,"Session Connect ID: " + session.getSessionId());
-        mPublisher = null;
-        mPublisher = new Publisher(this,mPublisherName);
-        mPublisher.setPublisherListener(this);
-        mPublisher.setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,BaseVideoRenderer.STYLE_VIDEO_FILL);
-        //Attach the view
-        mPubView.addView(mPublisher.getView());
-        mSession.publish(mPublisher);
-
-
-
-    }
-
-    //Session Listener Method
-    @Override
-    public void onDisconnected(Session session) {
-        Log.e(LOG_TAG,"Session Disconnect ID: " + session.getSessionId());
-        reset();
-    }
-
-    //Session Listener Method
-    @Override
-    public void onStreamReceived(Session session, Stream stream) {
-        Log.e(LOG_TAG,"Session ID Received: " + session.getSessionId());
-        Log.e(LOG_TAG,"Stream ID Recieved: " + stream.getStreamId());
-        Log.e(LOG_TAG,"Stream Name: " + stream.getName());
-
-    }
-
-    //Session Listener Method
-    @Override
-    public void onStreamDropped(Session session, Stream stream) {
-        Log.e(LOG_TAG,"Session ID Dropped: " + session.getSessionId());
-        Log.e(LOG_TAG,"Stream ID Dropped: " + stream.getStreamId());
-        Log.e(LOG_TAG,"Stream Name: " + stream.getName());
-
-    }
-
-    //Session Listener Method
-    @Override
-    public void onError(Session session, OpentokError opentokError) {
-        Log.e(LOG_TAG,"Session ID Error: " + session.getSessionId());
-        Log.e(LOG_TAG,"Open Tok Error Code: " + opentokError.getErrorCode().getErrorCode());
-        Log.e(LOG_TAG, "Open Tok Error Message: " + opentokError.getMessage());
-        Toast toast = Toast.makeText(this, "Session Error: " + opentokError.getMessage(),
-                Toast.LENGTH_SHORT);
-        toast.show();
-        isCasting = false;
-        reset();
     }
 
     @Override
     public void onClick(View view) {
         switch(view.getId())
         {
-
-            case R.id.cast_button:
+             case R.id.cast_button:
                 if(!isCasting) {
-                    Log.e(LOG_TAG,"Connect to Tok");
-                    //connectToTok();
-                    createSession();
+                    Log.i(LOG_TAG,"Connect to Tok");
+                    mTokSource.connect(1,"This is Matt's Stream");
+
                 }
                 else
                 {
-                    Log.e(LOG_TAG,"Disconnect from Tok");
-                    disconnectFromTok();
+                    Log.i(LOG_TAG,"Disconnect from Tok");
+                    mTokSource.endBroadcast();
                 }
                 break;
         }
     }
 
+
+
+    /**
+     * Once the session has been created we want to publish the stream
+     */
     @Override
-    public void onStreamCreated(PublisherKit publisherKit, Stream stream) {
-           Log.e(LOG_TAG,"Stream created");
-           mCastButton.setText(CASTING_TEXT);
-           isCasting = true;
-           mLogoView.setVisibility(View.INVISIBLE);
-
+    public void sessionCreated() {
+        Log.i(LOG_TAG,"Session has been created");
+        mTokSource.publishStream(mPubView);
     }
 
+    /**
+     * Fired once we go live
+     */
     @Override
-    public void onStreamDestroyed(PublisherKit publisherKit, Stream stream) {
-           Log.e(LOG_TAG,"Stream Destroyed");
-           reset();
+    public void isLive() {
+        Log.i(LOG_TAG,"Session is Live");
+        isCasting = true;
+        mLogoView.setVisibility(View.INVISIBLE);
+        mCastButton.setText(CASTING_TEXT);
     }
 
+    /**
+     * Fired when the session is terminated
+     */
     @Override
-    public void onError(PublisherKit publisherKit, OpentokError opentokError) {
-            Log.e(LOG_TAG,"Stream Error");
-            reset();
-    }
-
-
-    /**
-     * 1) Create a Session, through parse with valid user
-     * 2) Get the token
-     * 3) Connect to the session
-     * 4) Setup the appropriate listeners
-     */
-    private void connectToTok()
-    {
-
-        mSession = null;
-        //Setup the session with the API key and Session ID
-        //TODO move to parse
-        Log.e(LOG_TAG,"Session ID: " + mBroadcastObj.get("sessionId"));
-        final String sessionId = mBroadcastObj.getString(CastrBroadcast.BROADCAST_SESSION_ID_KEY);
-        Log.e(LOG_TAG,"Object ID: " + mBroadcastObj.getObjectId());
-        //Get the token by passing in the OBJECT_ID from parse - not the session ID.  The objectID is uniquely created by parse.
-        ParseHelper.getAccessToken(mBroadcastObj.getObjectId(), new FunctionCallback<Object>() {
-                    @Override
-                    public void done(Object o, ParseException e) {
-
-                        if(e == null)
-                        {
-                            String token = o.toString();
-                            Log.e(LOG_TAG,"Token: " + token);
-                            if(token != null) {
-                                connectToSession(token, sessionId);
-                            }
-                            else
-                            {
-                                Log.e(LOG_TAG,"There is an issue generating TokBox tokens");
-                            }
-                        }
-                        else
-                        {
-                            Log.e(LOG_TAG,"Exception: " + e.getLocalizedMessage());
-
-                        }
-                    }
-        });
-
-
-
-
-
-    }
-
-    /**
-     * Connect to parse and get the session ID
-     */
-     private void createSession()
-    {
-        mBroadcastObj = ParseHelper.createBroadcast(1,"Android Rules", new SaveCallback() {
-            @Override
-            public void done(ParseException e) {
-                if (e == null){
-                    //Got the session info, connect to Tok
-                    connectToTok();
-                }
-                else
-                {
-                    Log.e(LOG_TAG,"Exception with Parse");
-                    Log.e(LOG_TAG,"Exception: " + e.getLocalizedMessage());
-                }
-            }
-        });
-    }
-
-    /**
-     * After creating the session, the session needs to be connected to, needs error handling
-     */
-
-    private void connectToSession(String token, String sessionId)
-    {
-        mSession = new Session(this, GenericConstants.TOK_API_KEY, sessionId);
-        mSession.setConnectionListener(this);
-        mSession.setSessionListener(this);
-        mSession.setSignalListener(this);
-        mSession.setStreamPropertiesListener(this);
-        mSession.connect(token);
-    }
-
-
-    /**
-     * Disconnect from TokBox
-     */
-    private void disconnectFromTok()
-    {
-        if(mSession != null)
-        {
-            mSession.disconnect();
-            reset();
-            mPubView.removeAllViews();
-        }
-    }
-
-    /**
-     * Full reset before starting a stream
-     */
-    public void reset()
-    {
-        if(mSession != null)
-        {
-            mSession.disconnect();
-
-        }
+    public void sessionTerminated() {
+        Log.e(LOG_TAG,"Session has been terminated");
         isCasting = false;
-        mSession = null;
-        mPublisher = null;
         mLogoView.setVisibility(View.VISIBLE);
         mCastButton.setText(NOT_CASTING_TEXT);
-        if(mBroadcastObj != null)
-        {
-            ParseHelper.endBroadcast(mBroadcastObj);
-            Log.e(LOG_TAG,"Ended Broadcast");
-        }
-
-
     }
-
 }

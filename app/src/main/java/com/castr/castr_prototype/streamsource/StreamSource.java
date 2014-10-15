@@ -1,4 +1,4 @@
-package streamsource;
+package com.castr.castr_prototype.streamsource;
 
 import android.content.Context;
 import android.widget.RelativeLayout;

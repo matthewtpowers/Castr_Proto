@@ -11,8 +11,7 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
 import com.castr.castr_prototype.R;
-import com.castr.castr_prototype.model.CastrBroadcast;
-import streamsource.TokSource;
+import com.castr.castr_prototype.streamsource.TokSource;
 
 /**
  * @author Matt Powers, Applico

@@ -1,15 +1,13 @@
-package streamsource;
+package com.castr.castr_prototype.streamsource;
 
 import android.content.Context;
 import android.util.Log;
-import android.view.View;
 import android.widget.RelativeLayout;
 
 import com.castr.castr_prototype.config.GenericConstants;
 import com.castr.castr_prototype.model.CastrBroadcast;
 import com.castr.castr_prototype.util.ParseHelper;
 import com.opentok.android.BaseVideoRenderer;
-import com.opentok.android.Connection;
 import com.opentok.android.OpentokError;
 import com.opentok.android.Publisher;
 import com.opentok.android.PublisherKit;

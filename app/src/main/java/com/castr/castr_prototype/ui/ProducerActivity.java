@@ -77,7 +77,7 @@ public class ProducerActivity extends Activity implements  View.OnClickListener,
     protected void onResume() {
         if(mTokSource != null)
         {
-            mTokSource.resumeBroadcast();
+            mTokSource.resume();
         }
         super.onResume();
     }
@@ -87,7 +87,7 @@ public class ProducerActivity extends Activity implements  View.OnClickListener,
         Log.e(LOG_TAG,"On Pause");
         if(mTokSource != null)
         {
-            mTokSource.pauseBroadcast();
+            mTokSource.pause();
         }
         super.onPause();
     }
@@ -111,7 +111,7 @@ public class ProducerActivity extends Activity implements  View.OnClickListener,
              case R.id.cast_button:
                 if(!isCasting) {
                     Log.i(LOG_TAG,"Connect to Tok");
-                    mTokSource.connect(1,"This is Matt's Stream");
+                    mTokSource.connectToPublish(1,"This is Matt's Stream");
 
                 }
                 else
@@ -131,7 +131,7 @@ public class ProducerActivity extends Activity implements  View.OnClickListener,
     @Override
     public void sessionCreated() {
         Log.i(LOG_TAG,"Session has been created");
-        mTokSource.publishStream(mPubView);
+        mTokSource.publishStream(mPubView, "stream title");
     }
 
     /**

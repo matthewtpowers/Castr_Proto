@@ -15,13 +15,10 @@ import android.widget.SpinnerAdapter;
 import android.widget.Toast;
 
 import com.castr.castr_prototype.R;
-import com.castr.castr_prototype.config.GenericConstants;
 import com.castr.castr_prototype.model.CastrBroadcast;
+import com.castr.castr_prototype.streamsource.StreamSource;
+import com.castr.castr_prototype.streamsource.TokSource;
 import com.castr.castr_prototype.util.ParseHelper;
-import com.opentok.android.BaseVideoRenderer;
-import com.opentok.android.Connection;
-import com.opentok.android.OpentokError;
-import com.opentok.android.Publisher;
 import com.opentok.android.Session;
 import com.opentok.android.Stream;
 import com.opentok.android.Subscriber;
@@ -33,8 +30,7 @@ import com.parse.ParseObject;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ConsumerActivity extends Activity implements View.OnClickListener, Session.ConnectionListener, Session.SignalListener, Session.StreamPropertiesListener, Session.SessionListener, SubscriberKit.SubscriberListener,
-        Subscriber.VideoListener, ActionBar.OnNavigationListener {
+public class ConsumerActivity extends Activity implements View.OnClickListener, ActionBar.OnNavigationListener, TokSource.SourceCallback{
 
     private static final String LOG_TAG = ConsumerActivity.class.getSimpleName();
     private static final String NOT_CASTING_TEXT = "Grab a Cast!";
@@ -51,9 +47,11 @@ public class ConsumerActivity extends Activity implements View.OnClickListener, 
 
     //Tokbox Elements
     private Session mSession;
-    private Subscriber mSubscriber;
 
     private boolean isSubscribed = false;
+
+    //TokSource drive everything right now.  Forewarning its coupled with Parse
+    private TokSource mTokSource;
 
 
     @Override
@@ -67,6 +65,7 @@ public class ConsumerActivity extends Activity implements View.OnClickListener, 
         mCastButton.setOnClickListener(this);
         mLogoView = (ImageView)findViewById(R.id.logo);
         getAvailableStreams();
+        mTokSource = new TokSource(this,this);
 
     }
 
@@ -93,20 +92,22 @@ public class ConsumerActivity extends Activity implements View.OnClickListener, 
     //Android Lifecycle Methods
 
 
+    //Android Lifecycle Methods
     @Override
     protected void onResume() {
-        Log.e(LOG_TAG, "On Resume");
-        if (mSession != null) {
-            mSession.onResume();
+        if(mTokSource != null)
+        {
+            mTokSource.resume();
         }
         super.onResume();
     }
 
     @Override
     protected void onPause() {
-        Log.e(LOG_TAG, "On Pause");
-        if (mSession != null) {
-            mSession.onPause();
+        Log.e(LOG_TAG,"On Pause");
+        if(mTokSource != null)
+        {
+            mTokSource.pause();
         }
         super.onPause();
     }
@@ -114,7 +115,7 @@ public class ConsumerActivity extends Activity implements View.OnClickListener, 
     @Override
     protected void onDestroy() {
         Log.e(LOG_TAG,"OnDestroy");
-        reset();
+        //reset();
         super.onDestroy();
     }
 
@@ -124,11 +125,13 @@ public class ConsumerActivity extends Activity implements View.OnClickListener, 
         switch (view.getId()) {
             case R.id.consume_button:
                 if(!isSubscribed) {
-                    consumeTok();
+                    //consumeTok();
+                    //mTokSource.connectToStream();
+                    //mTokSource.connectToStream("2_MX40NTAwOTE5Mn5-MTQxMzQxMDgwMzM5N35ibXB2QTVyK0IrTHBjVG5udFlJbVEweFZ-fg");
                 }
                 else
                 {
-                    reset();
+                    //reset();
                 }
                 break;
         }
@@ -136,152 +139,14 @@ public class ConsumerActivity extends Activity implements View.OnClickListener, 
     }
 
     @Override
-    public void onConnectionCreated(Session session, Connection connection) {
-        Log.e(LOG_TAG, "Connection Listener Connect ID: " + session.getSessionId());
-        Log.e(LOG_TAG, "Connection Listener Creation Time: " + connection.getCreationTime());
-        Log.e(LOG_TAG, "Connection Listener Connection ID: " + connection.getConnectionId());
-    }
-
-    @Override
-    public void onConnectionDestroyed(Session session, Connection connection) {
-        Log.e(LOG_TAG, "Connection Destroyed Connect ID: " + session.getSessionId());
-        Log.e(LOG_TAG, "Connection Destroyed Creation Time: " + connection.getCreationTime());
-        Log.e(LOG_TAG, "Connection Destroyed Connection ID: " + connection.getConnectionId());
-    }
-
-    @Override
-    public void onConnected(Session session) {
-        Log.e(LOG_TAG, "Session Connect ID: " + session.getSessionId());
-    }
-
-    @Override
-    public void onDisconnected(Session session) {
-        Log.e(LOG_TAG, "Session Disconnect ID: " + session.getSessionId());
-        //reset();
-    }
-
-
-    //A stream is received when a stream is published to a session
-    @Override
-    public void onStreamReceived(Session session, Stream stream) {
-        Log.e(LOG_TAG, "Session ID Received: " + session.getSessionId());
-        Log.e(LOG_TAG, "Stream ID Recieved: " + stream.getStreamId());
-        Log.e(LOG_TAG, "Stream Name: " + stream.getName());
-
-        //This is where the stream code would go
-        mSubscriber = new Subscriber(this, stream);
-        mSubscriber.setSubscriberListener(this);
-        mSubscriber.setVideoListener(this);
-        mSession.subscribe(mSubscriber);
-        mCastButton.setText(CASTING_TEXT);
-        isSubscribed = true;
-    }
-
-    @Override
-    public void onStreamDropped(Session session, Stream stream) {
-        Log.e(LOG_TAG, "Session ID Dropped: " + session.getSessionId());
-        Log.e(LOG_TAG, "Stream ID Dropped: " + stream.getStreamId());
-        Log.e(LOG_TAG, "Stream Name: " + stream.getName());
-    }
-
-    @Override
-    public void onError(Session session, OpentokError opentokError) {
-        Log.e(LOG_TAG, "Session ID Error: " + session.getSessionId());
-        Log.e(LOG_TAG, "Open Tok Error Code: " + opentokError.getErrorCode().getErrorCode());
-        Log.e(LOG_TAG, "Open Tok Error Message: " + opentokError.getMessage());
-        Toast toast = Toast.makeText(this, "Session Error: " + opentokError.getMessage(),
-                Toast.LENGTH_SHORT);
-        toast.show();
-        //isCasting = false;
-        //reset();
-    }
-
-    @Override
-    public void onSignalReceived(Session session, String s, String s2, Connection connection) {
-        Log.e(LOG_TAG, "Signal Received");
-    }
-
-    @Override
-    public void onStreamHasAudioChanged(Session session, Stream stream, boolean b) {
-        Log.e(LOG_TAG, "Stream Audio Changed");
-    }
-
-    @Override
-    public void onStreamHasVideoChanged(Session session, Stream stream, boolean b) {
-        Log.e(LOG_TAG, "Stream Video Changed");
-    }
-
-    @Override
-    public void onStreamVideoDimensionsChanged(Session session, Stream stream, int i, int i2) {
-        Log.e(LOG_TAG, "Stream Video Dimensions Changed");
-    }
-
-    @Override
-    public void onConnected(SubscriberKit subscriberKit) {
-        Log.e(LOG_TAG, "Subscriber Connected");
-    }
-
-    @Override
-    public void onDisconnected(SubscriberKit subscriberKit) {
-        Log.e(LOG_TAG, "Subscriber Disconnected");
-
-    }
-
-    @Override
-    public void onError(SubscriberKit subscriberKit, OpentokError opentokError) {
-        Log.e(LOG_TAG, "Subscriber Error");
-    }
-
-    @Override
-    public void onVideoDataReceived(SubscriberKit subscriberKit) {
-        Log.e(LOG_TAG, "Video Data Recieved");
-        mLogoView.setVisibility(View.INVISIBLE);
-        //We want to inflate the view
-        mConsumerView.addView(mSubscriber.getView());
-        subscriberKit.setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,BaseVideoRenderer.STYLE_VIDEO_FILL);
-
-    }
-
-    @Override
-    public void onVideoDisabled(SubscriberKit subscriberKit, String s) {
-        Log.e(LOG_TAG, "Video Disabled");
-    }
-
-    @Override
-    public void onVideoEnabled(SubscriberKit subscriberKit, String s) {
-        Log.e(LOG_TAG, "Video Enabled");
-    }
-
-    @Override
-    public void onVideoDisableWarning(SubscriberKit subscriberKit) {
-        Log.e(LOG_TAG, "Video Disabled Warning");
-    }
-
-    @Override
-    public void onVideoDisableWarningLifted(SubscriberKit subscriberKit) {
-        Log.e(LOG_TAG, "Video Disabled Warning Lifted");
-    }
-
-    @Override
     public boolean onNavigationItemSelected(int itemPosition, long itemId)
     {
         Log.e(LOG_TAG,"Item Selected");
+        mTokSource.connectToStream(mBroadcasts.get(itemPosition));
         return false;
     }
 
-
-    private void consumeTok() {
-        mSession = null;
-        //Setup the session with the API key and Session ID
-        //TODO move to parse
-        //mSession = new Session(this, GenericConstants.TOK_API_KEY, GenericConstants.TOK_SESSION_ID);
-        mSession.setConnectionListener(this);
-        mSession.setSessionListener(this);
-        mSession.setSignalListener(this);
-        mSession.setStreamPropertiesListener(this);
-        mSession.connect(GenericConstants.TOK_TOKEN);
-    }
-
+    /*
     private void reset()
     {
         if (mSession != null) {
@@ -289,12 +154,12 @@ public class ConsumerActivity extends Activity implements View.OnClickListener, 
 
         }
         mSession = null;
-        mSubscriber = null;
+        //mSubscriber = null;
         mConsumerView.removeAllViews();
         mCastButton.setText(NOT_CASTING_TEXT);
         isSubscribed = false;
         mLogoView.setVisibility(View.VISIBLE);
-    }
+    }*/
 
     private void getAvailableStreams()
     {
@@ -324,5 +189,24 @@ public class ConsumerActivity extends Activity implements View.OnClickListener, 
                 }
             }
         });
+    }
+
+    @Override
+    public void sessionCreated() {
+        Log.e(LOG_TAG,"Session Created");
+        mCastButton.setText(CASTING_TEXT);
+    }
+
+    @Override
+    public void isLive() {
+        Log.e(LOG_TAG,"Is Live");
+        mLogoView.setVisibility(View.INVISIBLE);
+        mTokSource.consumeStream(mConsumerView);
+
+    }
+
+    @Override
+    public void sessionTerminated() {
+        Log.e(LOG_TAG,"Session Terminated");
     }
 }

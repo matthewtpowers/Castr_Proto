@@ -2,6 +2,7 @@ package com.castr.castr_prototype.streamsource;
 
 import android.content.Context;
 import android.util.Log;
+import android.widget.ArrayAdapter;
 import android.widget.RelativeLayout;
 
 import com.castr.castr_prototype.config.GenericConstants;
@@ -13,22 +14,28 @@ import com.opentok.android.Publisher;
 import com.opentok.android.PublisherKit;
 import com.opentok.android.Session;
 import com.opentok.android.Stream;
+import com.opentok.android.Subscriber;
+import com.opentok.android.SubscriberKit;
+import com.parse.FindCallback;
 import com.parse.FunctionCallback;
 import com.parse.ParseException;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by Matthew on 10/15/2014.
  */
-public class TokSource extends StreamSource implements Session.SessionListener, Publisher.PublisherListener, Session.StreamPropertiesListener{
+public class TokSource extends StreamSource implements Session.SessionListener, Publisher.PublisherListener, SubscriberKit.VideoListener{
 
     private static final String LOG_TAG = TokSource.class.getSimpleName();
 
     private Context mCtx;
     private SourceCallback mSourceCallback;
 
-    //UI Elements
+    //UI Elements - this is the canvas we are rendering on
     private RelativeLayout mCanvasLayout;
 
     //Parse Elements
@@ -37,9 +44,7 @@ public class TokSource extends StreamSource implements Session.SessionListener, 
     //TokBox Elements
     private Session mSession;
     private Publisher mPublisher;
-
-    //Publisher Name
-    private String mPublisherName;
+    private Subscriber mSubscriber;
 
 
     /**
@@ -50,19 +55,28 @@ public class TokSource extends StreamSource implements Session.SessionListener, 
      */
     public TokSource(Context ctx, SourceCallback sc){
         mCtx = ctx;
+        mSession = null;
         mSourceCallback = sc;
         mBroadcastObj = null;
-        mSession = null;
         mPublisher = null;
-        mPublisherName = ParseUser.getCurrentUser().getUsername();
-     }
+        mSubscriber = null;
+    }
+
+    /*public TokSource(Context ctx, SubscriberCallback sc, CastrBroadcast obj)
+    {
+        mCtx = ctx;
+        mSession = null;
+        mSubscriberCallback = sc;
+        mBroadcastObj = obj;
+        mSourceCallback = mSubscriberCallback;
+    }*/
 
 
     /**
      * Create the TokBox session, then connect to Tok
      */
     @Override
-    public void connect(int type, String title)
+    public void connectToPublish(int type, String title)
     {
         mBroadcastObj = ParseHelper.createBroadcast(type, title, new SaveCallback() {
             @Override
@@ -83,10 +97,10 @@ public class TokSource extends StreamSource implements Session.SessionListener, 
      * @param layout
      */
     @Override
-    public void publishStream(RelativeLayout layout){
+    public void publishStream(RelativeLayout layout, String name){
         mCanvasLayout = layout;
         Log.i(LOG_TAG,"Session Connect ID: " + mSession.getSessionId());
-        mPublisher = new Publisher(mCtx,mPublisherName);
+        mPublisher = new Publisher(mCtx,name);
         mPublisher.setPublisherListener(this);
         mPublisher.setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,BaseVideoRenderer.STYLE_VIDEO_FILL);
         //Attach the view
@@ -95,13 +109,9 @@ public class TokSource extends StreamSource implements Session.SessionListener, 
 
     }
 
-    @Override
-    public void consumeStream(RelativeLayout layout){
-
-    }
 
     @Override
-    public void pauseBroadcast()
+    public void pause()
     {
         if(mSession != null)
         {
@@ -110,7 +120,7 @@ public class TokSource extends StreamSource implements Session.SessionListener, 
     }
 
     @Override
-    public void resumeBroadcast()
+    public void resume()
     {
         if(mSession != null)
         {
@@ -137,22 +147,46 @@ public class TokSource extends StreamSource implements Session.SessionListener, 
     }
 
     @Override
-    public void pauseConsumption()
+    public void connectToStream(CastrBroadcast cast)
     {
-
+        mBroadcastObj = cast;
+        connectToTok();
     }
 
     @Override
-    public void resumeConsumption()
-    {
+    public void consumeStream(RelativeLayout layout){
+        Log.e(LOG_TAG,"Consuming the Stream by setting the video listener and the layout");
+        if(mSubscriber != null)
+        {
+            mCanvasLayout = layout;
+            mSubscriber.setVideoListener(this);
+
+        }
+        /*mSubscriber = new Subscriber(this, stream);
+        mSubscriber.setSubscriberListener(this);
+        mSubscriber.setVideoListener(this);
+        mSession.subscribe(mSubscriber);
+        mCastButton.setText(CASTING_TEXT);
+        */
 
     }
 
     @Override
     public void endConsumption()
     {
+        if(mSession != null)
+        {
+            mSession.disconnect();
 
+        }
+        mSession = null;
+        mSubscriber = null;
+        if(mCanvasLayout != null) {
+            mCanvasLayout.removeAllViews();
+        }
     }
+
+
     /**
      * 1) Create a Session, through parse with valid user
      * 2) Get the token
@@ -199,7 +233,6 @@ public class TokSource extends StreamSource implements Session.SessionListener, 
         //The connection listener is irrelevant if you have the Session listener
         //mSession.setConnectionListener(this);
         mSession.setSessionListener(this);
-        mSession.setStreamPropertiesListener(this);
         mSession.connect(token);
     }
 
@@ -210,7 +243,7 @@ public class TokSource extends StreamSource implements Session.SessionListener, 
      */
     @Override
     public void onConnected(Session session) {
-        Log.i(LOG_TAG,"We are connected and about to publish the stream");
+        Log.i(LOG_TAG,"We are connected and about to publish/subscribe the stream");
         //Signal the callback that we are connected and are ready to publish or consume
         mSourceCallback.sessionCreated();
     }
@@ -222,9 +255,23 @@ public class TokSource extends StreamSource implements Session.SessionListener, 
         endBroadcast();
     }
 
+    /**
+     * This is fired when ANOTHER client publishes a stream, we will use this for the subscriber to listen
+     * @param session
+     * @param stream
+     */
     @Override
     public void onStreamReceived(Session session, Stream stream) {
-        Log.i(LOG_TAG,"onStreamReceived");
+        Log.e(LOG_TAG, "Session ID Received: " + session.getSessionId());
+        Log.e(LOG_TAG, "Stream ID Recieved: " + stream.getStreamId());
+        Log.e(LOG_TAG, "Stream Name: " + stream.getName());
+
+        mSubscriber = new Subscriber(mCtx, stream);
+        //mSubscriber.setVideoListener(this);
+        mSession.subscribe(mSubscriber);
+        mSourceCallback.isLive();
+        //mCastButton.setText(CASTING_TEXT);
+        //isSubscribed = true;
     }
 
     @Override
@@ -253,20 +300,31 @@ public class TokSource extends StreamSource implements Session.SessionListener, 
         Log.e(LOG_TAG,"onError");
     }
 
+
     @Override
-    public void onStreamHasAudioChanged(Session session, Stream stream, boolean b) {
-        Log.i(LOG_TAG,"Stream Audio Has Changed");
+    public void onVideoDataReceived(SubscriberKit subscriberKit) {
+        Log.e(LOG_TAG, "Video Data Recieved");
+        mCanvasLayout.addView(mSubscriber.getView());
+        subscriberKit.setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,BaseVideoRenderer.STYLE_VIDEO_FILL);
     }
 
     @Override
-    public void onStreamHasVideoChanged(Session session, Stream stream, boolean b) {
-        Log.i(LOG_TAG,"Stream Video has Changed");
+    public void onVideoDisabled(SubscriberKit subscriberKit, String s) {
+
     }
 
     @Override
-    public void onStreamVideoDimensionsChanged(Session session, Stream stream, int i, int i2) {
-       Log.i(LOG_TAG,"Stream Video Dimensions Have Changed");
+    public void onVideoEnabled(SubscriberKit subscriberKit, String s) {
+
     }
 
+    @Override
+    public void onVideoDisableWarning(SubscriberKit subscriberKit) {
 
+    }
+
+    @Override
+    public void onVideoDisableWarningLifted(SubscriberKit subscriberKit) {
+
+    }
 }

@@ -9,6 +9,8 @@ import com.parse.Parse;
 import com.parse.ParseObject;
 import com.parse.ParseUser;
 
+import java.util.List;
+
 /**
  * Created by Matthew on 10/15/2014.
  *
@@ -20,11 +22,17 @@ import com.parse.ParseUser;
  */
 public abstract class StreamSource {
 
+    /**
+     * Callbacks for the publishers
+     */
     public interface SourceCallback{
         abstract void sessionCreated();
         abstract void isLive();
         abstract void sessionTerminated();
-     }
+        //TODO - add error handling
+    }
+
+
 
     /**
      * This init implementation is going to need to be here. I don't envision tokbox getting
@@ -44,30 +52,41 @@ public abstract class StreamSource {
         ParseUser.getCurrentUser().saveInBackground();
     }
 
-    public abstract void connect(int type, String title);
-
-    //Making the assumption that you always are going to need a view to render the video on
-    public abstract void publishStream(RelativeLayout layout);
-
-    //Making the assumption that you always are going to need a view to render the video on
-    public abstract void consumeStream(RelativeLayout layout);
-
-    //Broadcasts will need to be handled when there is an onPause event
-    public abstract void pauseBroadcast();
-
+    /*
+    Shared Methods
+     */
     //Similarly for onResume
-    public abstract void resumeBroadcast();
+    public abstract void resume();
+
+    //Will need to be handled when there is an onPause event
+    public abstract void pause();
+
+    public abstract void connectToPublish(int type, String title);
+
+    /*
+   Broadcast specific methods
+    */
+
+    //Making the assumption that you always are going to need a view to render the video on
+    public abstract void publishStream(RelativeLayout layout, String name);
+
 
     //Ability to end a broadcast
     public abstract void endBroadcast();
 
-    //Ability to Pause Consumption
-    public abstract void pauseConsumption();
 
-    //Resume consumption
-    public abstract void resumeConsumption();
+    /*
+    Consumption specific methods
+     */
+    //Connect logic is different than publishing
+    public abstract void connectToStream(CastrBroadcast cast);
+
+    //Making the assumption that you always are going to need a view to render the video on
+    public abstract void consumeStream(RelativeLayout layout);
 
     //End consumption
     public abstract void endConsumption();
+
+
 
 }

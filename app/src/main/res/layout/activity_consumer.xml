@@ -11,6 +11,14 @@
         android:layout_height="fill_parent" >
     </RelativeLayout>
 
+    <Button
+        android:id="@+id/consume_button"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:text="Grab a Cast!"
+        />
+
     <ImageView
         android:id="@+id/logo"
         android:layout_width="wrap_content"
@@ -18,12 +26,5 @@
         android:layout_centerInParent="true"
         android:src="@drawable/castr_logo"/>
 
-    <Button
-        android:id="@+id/consume_button"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:text="Grab a Cast!"
-        />
 
 </RelativeLayout>

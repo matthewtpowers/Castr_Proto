@@ -16,14 +16,10 @@ import com.opentok.android.Session;
 import com.opentok.android.Stream;
 import com.opentok.android.Subscriber;
 import com.opentok.android.SubscriberKit;
-import com.parse.FindCallback;
 import com.parse.FunctionCallback;
 import com.parse.ParseException;
-import com.parse.ParseUser;
 import com.parse.SaveCallback;
 
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by Matthew on 10/15/2014.
@@ -62,16 +58,6 @@ public class TokSource extends StreamSource implements Session.SessionListener, 
         mSubscriber = null;
     }
 
-    /*public TokSource(Context ctx, SubscriberCallback sc, CastrBroadcast obj)
-    {
-        mCtx = ctx;
-        mSession = null;
-        mSubscriberCallback = sc;
-        mBroadcastObj = obj;
-        mSourceCallback = mSubscriberCallback;
-    }*/
-
-
     /**
      * Create the TokBox session, then connect to Tok
      */
@@ -104,12 +90,15 @@ public class TokSource extends StreamSource implements Session.SessionListener, 
         mPublisher.setPublisherListener(this);
         mPublisher.setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,BaseVideoRenderer.STYLE_VIDEO_FILL);
         //Attach the view
-        layout.addView(mPublisher.getView());
+        mCanvasLayout.addView(mPublisher.getView());
         mSession.publish(mPublisher);
 
     }
 
 
+    /**
+     * This should be called for onPause activity events
+     */
     @Override
     public void pause()
     {
@@ -119,6 +108,9 @@ public class TokSource extends StreamSource implements Session.SessionListener, 
         }
     }
 
+    /**
+     * This should be called for onResume activity events
+     */
     @Override
     public void resume()
     {
@@ -128,6 +120,9 @@ public class TokSource extends StreamSource implements Session.SessionListener, 
         }
     }
 
+    /**
+     * End broadcasting and reset the layouts
+     */
     @Override
     public void endBroadcast(){
         if(mSession != null)
@@ -146,6 +141,10 @@ public class TokSource extends StreamSource implements Session.SessionListener, 
         }
     }
 
+    /**
+     * Connected to the stream
+     * @param cast
+     */
     @Override
     public void connectToStream(CastrBroadcast cast)
     {
@@ -153,6 +152,11 @@ public class TokSource extends StreamSource implements Session.SessionListener, 
         connectToTok();
     }
 
+    /**
+     * Consume the stream once we verity it is there.  Pass the canvas for the video
+     * into the object
+     * @param layout
+     */
     @Override
     public void consumeStream(RelativeLayout layout){
         Log.e(LOG_TAG,"Consuming the Stream by setting the video listener and the layout");
@@ -162,15 +166,11 @@ public class TokSource extends StreamSource implements Session.SessionListener, 
             mSubscriber.setVideoListener(this);
 
         }
-        /*mSubscriber = new Subscriber(this, stream);
-        mSubscriber.setSubscriberListener(this);
-        mSubscriber.setVideoListener(this);
-        mSession.subscribe(mSubscriber);
-        mCastButton.setText(CASTING_TEXT);
-        */
-
     }
 
+    /**
+     * End the consumption of video from a subscriber
+     */
     @Override
     public void endConsumption()
     {
@@ -252,7 +252,7 @@ public class TokSource extends StreamSource implements Session.SessionListener, 
     public void onDisconnected(Session session) {
         Log.e(LOG_TAG,"onDisconnected: " + session.getSessionId());
         mSourceCallback.sessionTerminated();
-        endBroadcast();
+
     }
 
     /**
@@ -277,30 +277,46 @@ public class TokSource extends StreamSource implements Session.SessionListener, 
     @Override
     public void onStreamDropped(Session session, Stream stream) {
         Log.e(LOG_TAG,"onStreamDropped");
+        mSourceCallback.sessionTerminated();
     }
 
     @Override
     public void onError(Session session, OpentokError opentokError) {
         Log.e(LOG_TAG,"onError");
+        mSourceCallback.sessionTerminated();
     }
 
+    /**
+     * This is for the publisher, basically indicates to the calling activity that it is
+     * live
+     * @param publisherKit
+     * @param stream
+     */
     @Override
     public void onStreamCreated(PublisherKit publisherKit, Stream stream) {
         Log.e(LOG_TAG,"onStreamCreated");
         mSourceCallback.isLive();
     }
 
+    //TODO - this needs an error event to the UI
     @Override
     public void onStreamDestroyed(PublisherKit publisherKit, Stream stream) {
         Log.e(LOG_TAG,"onStreamDestroyed");
+        mSourceCallback.sessionTerminated();
     }
 
+    //TODO this needs an error event to the UI
     @Override
     public void onError(PublisherKit publisherKit, OpentokError opentokError) {
         Log.e(LOG_TAG,"onError");
+        mSourceCallback.sessionTerminated();
     }
 
 
+    /**
+     * This is for the subscriber client to signal that the activity is coming in
+     * @param subscriberKit
+     */
     @Override
     public void onVideoDataReceived(SubscriberKit subscriberKit) {
         Log.e(LOG_TAG, "Video Data Recieved");
@@ -308,6 +324,9 @@ public class TokSource extends StreamSource implements Session.SessionListener, 
         subscriberKit.setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,BaseVideoRenderer.STYLE_VIDEO_FILL);
     }
 
+    /*
+    TODO - we should probably put in custom events to the UI when this fires.
+     */
     @Override
     public void onVideoDisabled(SubscriberKit subscriberKit, String s) {
 

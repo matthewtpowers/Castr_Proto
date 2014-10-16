@@ -1,6 +1,7 @@
 package com.castr.castr_prototype.model;
 
 import com.parse.ParseClassName;
+import com.parse.ParseFile;
 import com.parse.ParseObject;
 import com.parse.ParseUser;
 
@@ -26,6 +27,7 @@ public class CastrBroadcast extends ParseObject {
     public static final String BROADCAST_ACL_KEY = "ACL";
     public static final String BROADCAST_TVIEWERS_KEY = "totalViewers";
     public static final String BROADCAST_WCOUNT_KEY = "watchersCount";
+    public static final String BROADCAST_SS_IMAGE_KEY = "screenshotImageFile";
 
     public CastrBroadcast(){
         super();
@@ -119,6 +121,17 @@ public class CastrBroadcast extends ParseObject {
     {
         return getInt(BROADCAST_WCOUNT_KEY);
     }
+
+    public void setImageFile (ParseFile file)
+    {
+        put(BROADCAST_SS_IMAGE_KEY, file);
+    }
+
+    public ParseFile getImageFile()
+    {
+        return getParseFile(BROADCAST_SS_IMAGE_KEY);
+    }
+
 
 
 }

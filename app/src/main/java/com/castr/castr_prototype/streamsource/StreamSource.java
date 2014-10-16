@@ -30,6 +30,13 @@ public abstract class StreamSource {
         abstract void isLive();
         abstract void sessionTerminated();
         //TODO - add error handling
+        /**
+         * Proposed Error Codes
+         * 1) Error connecting
+         * 2) Error broadcasting
+         * 3) Error consuming
+         *
+         */
     }
 
 

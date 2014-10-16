@@ -11,8 +11,6 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
-import android.widget.SpinnerAdapter;
-import android.widget.Toast;
 
 import com.castr.castr_prototype.R;
 import com.castr.castr_prototype.model.CastrBroadcast;
@@ -20,12 +18,8 @@ import com.castr.castr_prototype.streamsource.StreamSource;
 import com.castr.castr_prototype.streamsource.TokSource;
 import com.castr.castr_prototype.util.ParseHelper;
 import com.opentok.android.Session;
-import com.opentok.android.Stream;
-import com.opentok.android.Subscriber;
-import com.opentok.android.SubscriberKit;
 import com.parse.FindCallback;
 import com.parse.ParseException;
-import com.parse.ParseObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +30,13 @@ public class ConsumerActivity extends Activity implements View.OnClickListener, 
     private static final String NOT_CASTING_TEXT = "Grab a Cast!";
     private static final String CASTING_TEXT = "Get me out of here!";
 
+    //Hack for the action bar
+    private boolean mInitializing = true;
+
+    private boolean mIsStreaming = false;
+
+    private int mSelectedStream = -1;
+
     //UI Related Elements
     private RelativeLayout mConsumerView;
     private Button mCastButton;
@@ -45,10 +46,6 @@ public class ConsumerActivity extends Activity implements View.OnClickListener, 
     //Parse Elements
     private List<CastrBroadcast> mBroadcasts;
 
-    //Tokbox Elements
-    private Session mSession;
-
-    private boolean isSubscribed = false;
 
     //TokSource drive everything right now.  Forewarning its coupled with Parse
     private TokSource mTokSource;
@@ -90,9 +87,6 @@ public class ConsumerActivity extends Activity implements View.OnClickListener, 
     }
 
     //Android Lifecycle Methods
-
-
-    //Android Lifecycle Methods
     @Override
     protected void onResume() {
         if(mTokSource != null)
@@ -104,7 +98,6 @@ public class ConsumerActivity extends Activity implements View.OnClickListener, 
 
     @Override
     protected void onPause() {
-        Log.e(LOG_TAG,"On Pause");
         if(mTokSource != null)
         {
             mTokSource.pause();
@@ -114,8 +107,11 @@ public class ConsumerActivity extends Activity implements View.OnClickListener, 
 
     @Override
     protected void onDestroy() {
-        Log.e(LOG_TAG,"OnDestroy");
-        //reset();
+        if(mTokSource != null)
+        {
+            mTokSource.endConsumption();
+        }
+        mTokSource = null;
         super.onDestroy();
     }
 
@@ -124,14 +120,13 @@ public class ConsumerActivity extends Activity implements View.OnClickListener, 
 
         switch (view.getId()) {
             case R.id.consume_button:
-                if(!isSubscribed) {
-                    //consumeTok();
-                    //mTokSource.connectToStream();
-                    //mTokSource.connectToStream("2_MX40NTAwOTE5Mn5-MTQxMzQxMDgwMzM5N35ibXB2QTVyK0IrTHBjVG5udFlJbVEweFZ-fg");
+                if(!mIsStreaming && mSelectedStream >= 0) {
+                    mTokSource.connectToStream(mBroadcasts.get(mSelectedStream));
+
                 }
                 else
                 {
-                    //reset();
+                    this.sessionTerminated();
                 }
                 break;
         }
@@ -141,33 +136,29 @@ public class ConsumerActivity extends Activity implements View.OnClickListener, 
     @Override
     public boolean onNavigationItemSelected(int itemPosition, long itemId)
     {
-        Log.e(LOG_TAG,"Item Selected");
-        mTokSource.connectToStream(mBroadcasts.get(itemPosition));
-        return false;
+        if(mInitializing)
+        {
+            mInitializing = false;
+            mSelectedStream = itemPosition;
+            return true;
+        }
+        else {
+            Log.e(LOG_TAG,"Item Selected");
+
+            return false;
+        }
+
     }
 
-    /*
-    private void reset()
-    {
-        if (mSession != null) {
-            mSession.disconnect();
-
-        }
-        mSession = null;
-        //mSubscriber = null;
-        mConsumerView.removeAllViews();
-        mCastButton.setText(NOT_CASTING_TEXT);
-        isSubscribed = false;
-        mLogoView.setVisibility(View.VISIBLE);
-    }*/
-
+    /**
+     * Create a list of available streams for the client to choose from
+     */
     private void getAvailableStreams()
     {
         ParseHelper.getAvailableBroadcasts(new FindCallback<CastrBroadcast>() {
             @Override
             public void done(List<CastrBroadcast> castrBroadcasts, ParseException e) {
                 if (e == null) {
-                    Log.e(LOG_TAG, "We are good, there are this many parse objects: " + castrBroadcasts.size());
                     mBroadcasts = castrBroadcasts;
                     List<String> broadcastTitles = new ArrayList<String>();
                     for (int i =0; i < mBroadcasts.size(); i++)
@@ -193,13 +184,14 @@ public class ConsumerActivity extends Activity implements View.OnClickListener, 
 
     @Override
     public void sessionCreated() {
-        Log.e(LOG_TAG,"Session Created");
+        Log.i(LOG_TAG,"Session Created");
         mCastButton.setText(CASTING_TEXT);
+        mIsStreaming = true;
     }
 
     @Override
     public void isLive() {
-        Log.e(LOG_TAG,"Is Live");
+        Log.i(LOG_TAG,"Is Live");
         mLogoView.setVisibility(View.INVISIBLE);
         mTokSource.consumeStream(mConsumerView);
 
@@ -207,6 +199,12 @@ public class ConsumerActivity extends Activity implements View.OnClickListener, 
 
     @Override
     public void sessionTerminated() {
-        Log.e(LOG_TAG,"Session Terminated");
+        Log.i(LOG_TAG,"Session Terminated");
+        if(mTokSource != null)
+        {
+            mTokSource.endConsumption();
+        }
+        mIsStreaming = false;
+        mCastButton.setText(NOT_CASTING_TEXT);
     }
 }

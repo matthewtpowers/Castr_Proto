@@ -17,6 +17,7 @@ import com.castr.castr_prototype.model.CastrBroadcast;
 import com.castr.castr_prototype.streamsource.StreamSource;
 import com.castr.castr_prototype.streamsource.TokSource;
 import com.castr.castr_prototype.util.ParseHelper;
+import com.firebase.client.Firebase;
 import com.opentok.android.Session;
 import com.parse.FindCallback;
 import com.parse.ParseException;
@@ -50,6 +51,8 @@ public class ConsumerActivity extends Activity implements View.OnClickListener, 
     //TokSource drive everything right now.  Forewarning its coupled with Parse
     private TokSource mTokSource;
 
+    private Firebase mFirebase;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +66,10 @@ public class ConsumerActivity extends Activity implements View.OnClickListener, 
         mLogoView = (ImageView)findViewById(R.id.logo);
         getAvailableStreams();
         mTokSource = new TokSource(this,this);
+
+        //TODO remove instances where we connected to firebase directly from the activity
+        Firebase.setAndroidContext(this);
+        mFirebase = new Firebase("caster-dev.firebaseapp.com/chat");
 
     }
 
@@ -187,6 +194,7 @@ public class ConsumerActivity extends Activity implements View.OnClickListener, 
         Log.i(LOG_TAG,"Session Created");
         mCastButton.setText(CASTING_TEXT);
         mIsStreaming = true;
+        mTokSource.consumeStream(mConsumerView);
     }
 
     @Override
@@ -194,6 +202,8 @@ public class ConsumerActivity extends Activity implements View.OnClickListener, 
         Log.i(LOG_TAG,"Is Live");
         mLogoView.setVisibility(View.INVISIBLE);
         mTokSource.consumeStream(mConsumerView);
+
+        //This is where we want to enable chat
 
     }
 

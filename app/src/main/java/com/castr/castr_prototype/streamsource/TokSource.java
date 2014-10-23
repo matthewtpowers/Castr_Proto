@@ -162,6 +162,7 @@ public class TokSource extends StreamSource implements Session.SessionListener, 
         Log.e(LOG_TAG,"Consuming the Stream by setting the video listener and the layout");
         if(mSubscriber != null)
         {
+            Log.e(LOG_TAG, "Consuming the stream");
             mCanvasLayout = layout;
             mSubscriber.setVideoListener(this);
 
@@ -234,6 +235,7 @@ public class TokSource extends StreamSource implements Session.SessionListener, 
         //mSession.setConnectionListener(this);
         mSession.setSessionListener(this);
         mSession.connect(token);
+        Log.e(LOG_TAG,"Connected to the session");
     }
 
 
@@ -270,8 +272,6 @@ public class TokSource extends StreamSource implements Session.SessionListener, 
         //mSubscriber.setVideoListener(this);
         mSession.subscribe(mSubscriber);
         mSourceCallback.isLive();
-        //mCastButton.setText(CASTING_TEXT);
-        //isSubscribed = true;
     }
 
     @Override

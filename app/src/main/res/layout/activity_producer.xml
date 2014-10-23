@@ -11,18 +11,26 @@
         android:layout_height="fill_parent" >
     </RelativeLayout>
 
+    <Button
+        android:id="@+id/cast_button"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:text="Start Casting!"
+        />
+
     <ImageView
         android:id="@+id/logo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
         android:src="@drawable/castr_logo"/>
-    <Button
-        android:id="@+id/cast_button"
+
+
+    <EditText
+        android:id="@+id/chat_window"
+        android:layout_below="@+id/logo"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:text="Start Casting!"
-        />
+        android:layout_height="300dp" />
 
 </RelativeLayout>

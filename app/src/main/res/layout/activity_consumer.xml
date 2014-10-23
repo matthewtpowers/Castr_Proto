@@ -26,5 +26,11 @@
         android:layout_centerInParent="true"
         android:src="@drawable/castr_logo"/>
 
+    <EditText
+        android:id="@+id/chat_window"
+        android:layout_below="@+id/logo"
+        android:layout_width="fill_parent"
+        android:layout_height="300dp" />
+
 
 </RelativeLayout>

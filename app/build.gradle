@@ -17,6 +17,12 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    packagingOptions {
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE-FIREBASE.txt'
+        exclude 'META-INF/NOTICE'
+    }
 }
 
 dependencies {
@@ -24,4 +30,5 @@ dependencies {
     //There is no gradle support for opentok or parse
     compile files('libs/opentok-android-sdk-2.3.1.jar')
     compile files('libs/Parse-1.7.0.jar')
+    compile ('com.firebase:firebase-client-android:1.1.1+')
 }

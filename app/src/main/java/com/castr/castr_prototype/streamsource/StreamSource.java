@@ -22,6 +22,27 @@ import java.util.List;
  */
 public abstract class StreamSource {
 
+    /** Message for any non auth errors connecting to the service provider **/
+    public static final int ERROR_CONNECTING = 1000;
+
+    /** Message for any errors while in a broadcasting session **/
+    public static final int ERROR_BROADCASTING = 1001;
+
+    /** Message for any errors while in a data receiving session **/
+    public static final int ERROR_CONSUMING = 1002;
+
+    /** Message for any errors authenticating **/
+    public static final int ERROR_AUTH = 1003;
+
+    /** Message for issues with the camera **/
+    public static final int ERROR_CAMERA = 1004;
+
+    /** Message for any other errors **/
+    public static final int ERROR_OTHER = 1005;
+
+
+
+
     /**
      * Callbacks for the publishers
      */
@@ -29,12 +50,15 @@ public abstract class StreamSource {
         abstract void sessionCreated();
         abstract void isLive();
         abstract void sessionTerminated();
+        abstract void onError(int code, String msg);
         //TODO - add error handling
         /**
          * Proposed Error Codes
          * 1) Error connecting
          * 2) Error broadcasting
          * 3) Error consuming
+         * 4) Error Authing
+         * 5) Error Other
          *
          */
     }
@@ -93,7 +117,6 @@ public abstract class StreamSource {
 
     //End consumption
     public abstract void endConsumption();
-
 
 
 }

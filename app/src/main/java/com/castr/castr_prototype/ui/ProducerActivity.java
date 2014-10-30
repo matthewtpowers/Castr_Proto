@@ -155,4 +155,26 @@ public class ProducerActivity extends Activity implements  View.OnClickListener,
         mLogoView.setVisibility(View.VISIBLE);
         mCastButton.setText(NOT_CASTING_TEXT);
     }
+
+    @Override
+    public void onError(int code, String msg) {
+        Log.i("We got an issue: ",msg);
+        //TODO need to implement error Logic
+        switch(code)
+        {
+            case TokSource.ERROR_AUTH:
+                break;
+            case TokSource.ERROR_BROADCASTING:
+                break;
+            case TokSource.ERROR_CAMERA:
+                break;
+            case TokSource.ERROR_CONNECTING:
+                break;
+            case TokSource.ERROR_CONSUMING:
+                break;
+            case TokSource.ERROR_OTHER:
+                break;
+
+        }
+    }
 }

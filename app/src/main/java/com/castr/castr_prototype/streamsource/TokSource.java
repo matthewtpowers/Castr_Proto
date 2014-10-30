@@ -16,6 +16,7 @@ import com.opentok.android.Session;
 import com.opentok.android.Stream;
 import com.opentok.android.Subscriber;
 import com.opentok.android.SubscriberKit;
+import com.opentok.android.OpentokError.ErrorCode;
 import com.parse.FunctionCallback;
 import com.parse.ParseException;
 import com.parse.SaveCallback;
@@ -23,6 +24,7 @@ import com.parse.SaveCallback;
 
 /**
  * Created by Matthew on 10/15/2014.
+ * This handles a tokbox source for streaming media
  */
 public class TokSource extends StreamSource implements Session.SessionListener, Publisher.PublisherListener, SubscriberKit.VideoListener{
 
@@ -282,8 +284,7 @@ public class TokSource extends StreamSource implements Session.SessionListener, 
 
     @Override
     public void onError(Session session, OpentokError opentokError) {
-        Log.e(LOG_TAG,"onError");
-        mSourceCallback.sessionTerminated();
+        handleTokError(opentokError);
     }
 
     /**
@@ -308,8 +309,7 @@ public class TokSource extends StreamSource implements Session.SessionListener, 
     //TODO this needs an error event to the UI
     @Override
     public void onError(PublisherKit publisherKit, OpentokError opentokError) {
-        Log.e(LOG_TAG,"onError");
-        mSourceCallback.sessionTerminated();
+        handleTokError(opentokError);
     }
 
 
@@ -346,4 +346,71 @@ public class TokSource extends StreamSource implements Session.SessionListener, 
     public void onVideoDisableWarningLifted(SubscriberKit subscriberKit) {
 
     }
+
+    private void handleTokError(OpentokError opentokError)
+    {
+        Log.e(LOG_TAG,"Error with TokBox");
+
+        String msg = opentokError.getMessage();
+        switch(opentokError.getErrorCode())
+        {
+            case AuthorizationFailure:
+                mSourceCallback.onError(ERROR_AUTH,msg);
+                break;
+            case CameraFailed:
+                mSourceCallback.onError(ERROR_CAMERA,msg);
+                break;
+            case ConnectionFailed:
+                mSourceCallback.onError(ERROR_CONNECTING,msg);
+                break;
+            case InvalidSessionId:
+                mSourceCallback.onError(ERROR_CONNECTING,msg);
+                break;
+            case NoMessagingServer:
+                mSourceCallback.onError(ERROR_CONNECTING,msg);
+                break;
+            case P2PSessionMaxParticipants:
+                mSourceCallback.onError(ERROR_OTHER,msg);
+                break;
+            case PublisherInternalError:
+                mSourceCallback.onError(ERROR_BROADCASTING,msg);
+                break;
+            case SessionInternalError:
+                mSourceCallback.onError(ERROR_OTHER,msg);
+                break;
+            case SessionInvalidSignalType:
+                mSourceCallback.onError(ERROR_OTHER,msg);
+                break;
+            case SessionNullOrInvalidParameter:
+                mSourceCallback.onError(ERROR_OTHER,msg);
+                break;
+            case SessionSignalDataTooLong:
+                mSourceCallback.onError(ERROR_OTHER,msg);
+                break;
+            case SessionSignalTypeTooLong:
+                mSourceCallback.onError(ERROR_OTHER,msg);
+                break;
+            case SessionStateFailed:
+                mSourceCallback.onError(ERROR_OTHER,msg);
+                break;
+            case SubscriberInternalError:
+                mSourceCallback.onError(ERROR_CONSUMING,msg);
+                break;
+            case UnknownPublisherInstance:
+                mSourceCallback.onError(ERROR_OTHER,msg);
+                break;
+            case UnknownSubscriberInstance:
+                mSourceCallback.onError(ERROR_OTHER,msg);
+                break;
+            case VideoCaptureFailed:
+                mSourceCallback.onError(ERROR_OTHER,msg);
+                break;
+            case VideoRenderFailed:
+                mSourceCallback.onError(ERROR_OTHER,msg);
+                break;
+
+        }
+
+    }
+
 }

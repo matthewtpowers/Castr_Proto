@@ -13,8 +13,8 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
 import com.castr.castr_prototype.R;
+import com.castr.castr_prototype.config.GenericConstants;
 import com.castr.castr_prototype.model.CastrBroadcast;
-import com.castr.castr_prototype.streamsource.StreamSource;
 import com.castr.castr_prototype.streamsource.TokSource;
 import com.castr.castr_prototype.util.ParseHelper;
 import com.firebase.client.Firebase;
@@ -54,6 +54,8 @@ public class ConsumerActivity extends Activity implements View.OnClickListener, 
     private Firebase mFirebase;
 
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -69,7 +71,7 @@ public class ConsumerActivity extends Activity implements View.OnClickListener, 
 
         //TODO remove instances where we connected to firebase directly from the activity
         Firebase.setAndroidContext(this);
-        mFirebase = new Firebase("caster-dev.firebaseapp.com/chat");
+        mFirebase = new Firebase(GenericConstants.FIREBASE_URL);
 
     }
 
@@ -217,4 +219,27 @@ public class ConsumerActivity extends Activity implements View.OnClickListener, 
         mIsStreaming = false;
         mCastButton.setText(NOT_CASTING_TEXT);
     }
+
+    @Override
+    public void onError(int code, String msg) {
+        Log.i("We got an issue: ",msg);
+        //TODO need to implement error Logic
+        switch(code)
+        {
+            case TokSource.ERROR_AUTH:
+                break;
+            case TokSource.ERROR_BROADCASTING:
+                break;
+            case TokSource.ERROR_CAMERA:
+                break;
+            case TokSource.ERROR_CONNECTING:
+                break;
+            case TokSource.ERROR_CONSUMING:
+                break;
+            case TokSource.ERROR_OTHER:
+                break;
+
+        }
+    }
+
 }

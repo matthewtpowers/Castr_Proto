@@ -2,7 +2,12 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+<<<<<<< HEAD
       <module fileurl="file://$PROJECT_DIR$/Castr_Proto.iml" filepath="$PROJECT_DIR$/Castr_Proto.iml" />
+=======
+      <module fileurl="file://$PROJECT_DIR$/Castr-Android-Prototype.iml" filepath="$PROJECT_DIR$/Castr-Android-Prototype.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Castr_Prototype.iml" filepath="$PROJECT_DIR$/Castr_Prototype.iml" />
+>>>>>>> castr_prod/dev
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>

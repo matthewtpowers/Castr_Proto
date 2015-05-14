@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+<<<<<<< HEAD
     package="applico.castr.castr_proto" >
 
     <application
@@ -9,6 +10,22 @@
         android:theme="@style/AppTheme" >
         <activity
             android:name=".HomeActivity"
+=======
+    package="com.castr.castr_prototype" >
+
+    <uses-sdk
+        android:minSdkVersion="16"
+        android:targetSdkVersion="17" />
+
+    <application
+        android:name=".application.CastrApplication"
+        android:allowBackup="true"
+        android:icon="@drawable/ic_castr_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme" >
+        <activity
+            android:name=".ui.TestWowza"
+>>>>>>> castr_prod/dev
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -16,6 +33,40 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+<<<<<<< HEAD
     </application>
 
+=======
+        <activity
+            android:name=".ui.ProducerActivity"
+            android:label="@string/title_activity_producer" >
+        </activity>
+        <activity
+            android:name=".ui.ConsumerActivity"
+            android:label="@string/title_activity_consumer" >
+        </activity>
+        <activity
+            android:name=".ui.HomeActivity"
+            android:label="@string/title_activity_test_wowza" >
+        </activity>
+    </application>
+
+    <!-- Need the camera to take video -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Permission to use internet -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Permission to record audio as part of the video -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- Permission to alter audio -->
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <!-- Permission to access network state -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <uses-feature android:name="android.hardware.camera" />
+    <uses-feature android:name="android.hardware.camera.autofocus" />
+
+>>>>>>> castr_prod/dev
 </manifest>
